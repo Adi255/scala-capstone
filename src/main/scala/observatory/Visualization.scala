@@ -57,11 +57,13 @@ object Visualization {
     * @return A 360×180 image where each pixel shows the predicted temperature at its location
     */
   def visualize(temperatures: Iterable[(Location, Double)], colors: Iterable[(Double, Color)]): Image = {
-    temperatures.foreach(println)
-    colors.foreach(println)
-    val locationColors = temperatures.map { case (location, temp) => (location.lat, location.lon, interpolateColor(colors, temp)) }
-    val pixels = locationColors.toList.sortBy(row => (-1 * row._1, row._2)).map { case (_, _, c) => Pixel(c.red, c.green, c.blue, 255) }.toArray
-    Image(360, 180, pixels)
+//    temperatures.foreach(println)
+//    colors.foreach(println)
+//    val locationColors = temperatures.map { case (location, temp) => (location.lat, location.lon, interpolateColor(colors, temp)) }
+    val colorMap = temperatures.map { case (location, temp) => ((location.lat.toInt, location.lon.toInt), interpolateColor(colors, temp)) }.toMap
+    val pixels = (-180 to 179).flatMap(i => (90 to -89).map(j => (i,j))).map{case (i,j) => colorMap.getOrElse((i,j), Color(0,0,0))}.map(c => Pixel(c.red, c.green, c.blue, 255))
+//    val pixels = locationColors.toList.sortBy(row => (-1 * row._1, row._2)).map { case (_, _, c) => Pixel(c.red, c.green, c.blue, 255) }.toArray
+    Image(360, 180, pixels.toArray)
   }
 
   /**

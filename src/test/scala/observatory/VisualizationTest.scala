@@ -83,6 +83,19 @@ class VisualizationTest extends FunSuite with Checkers {
     val pixels = image.pixels
     val written = image.output(new File("C:\\Users\\Adam\\Desktop\\some-image.png"))
     assert(written != null)
+
+//    (Location(45.0,-90.0),19.551640848805803)
+//    (Location(-45.0,0.0),-100.0)
+//    (19.551640848805803,Color(255,0,0))
+//    (-100.0,Color(0,0,255))
+  }
+
+  test("failing case visualise"){
+    val locatedTemps = Seq((Location(45.0,-90.0),19.551640848805803),(Location(-45.0,0.0),-100.0))
+    val colors =  Seq((19.551640848805803,Color(255,0,0)),(-100.0,Color(0,0,255)))
+    val image = Visualization.visualize(locatedTemps, colors)
+    val pixels = image.pixels
+    pixels.forall(_ != null)
   }
 
   //  test("Can produce image") {
