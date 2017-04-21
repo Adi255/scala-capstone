@@ -74,22 +74,6 @@ class VisualizationTest extends FunSuite with Checkers {
     assert(Visualization.interpolateColor(colors, 6) == Color(128, 255, 128))
   }
 
-  test("visualize") {
-    val locations = (-89 to 90).flatMap(i => (-179 to 180) map (j => Location(i, j)))
-    val locatedTemps = locations.map(loc => (loc, loc.lon))
-    val colorMap = locatedTemps.map{case (loc, temp) => (loc, Visualization.interpolateColor(colorThresholds, temp))}.toMap
-    val image = Visualization.visualize(locatedTemps, colorThresholds)
-    assert(image != null)
-    val pixels = image.pixels
-    val written = image.output(new File("C:\\Users\\Adam\\Desktop\\some-image.png"))
-    assert(written != null)
-
-//    (Location(45.0,-90.0),19.551640848805803)
-//    (Location(-45.0,0.0),-100.0)
-//    (19.551640848805803,Color(255,0,0))
-//    (-100.0,Color(0,0,255))
-  }
-
   test("failing case visualise"){
     val locatedTemps = Seq((Location(45.0,-90.0),19.551640848805803),(Location(-45.0,0.0),-100.0))
     val colors =  Seq((19.551640848805803,Color(255,0,0)),(-100.0,Color(0,0,255)))

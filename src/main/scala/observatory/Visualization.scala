@@ -11,7 +11,7 @@ object Visualization {
 
   val EarthRadiusKm = 6371
   private val distanceThreshold: Int = 1
-  private val p = 2
+  private val p = 3
 
   /**
     * @param temperatures Known temperatures: pairs containing a location and the temperature at this location
@@ -57,13 +57,11 @@ object Visualization {
     * @return A 360×180 image where each pixel shows the predicted temperature at its location
     */
   def visualize(temperatures: Iterable[(Location, Double)], colors: Iterable[(Double, Color)]): Image = {
-//    temperatures.foreach(println)
-//    colors.foreach(println)
-//    val locationColors = temperatures.map { case (location, temp) => (location.lat, location.lon, interpolateColor(colors, temp)) }
-    val colorMap = temperatures.map { case (location, temp) => ((location.lat.toInt, location.lon.toInt), interpolateColor(colors, temp)) }.toMap
-    val pixels = (-180 to 179).flatMap(i => (90 to -89).map(j => (i,j))).map{case (i,j) => colorMap.getOrElse((i,j), Color(0,0,0))}.map(c => Pixel(c.red, c.green, c.blue, 255))
-//    val pixels = locationColors.toList.sortBy(row => (-1 * row._1, row._2)).map { case (_, _, c) => Pixel(c.red, c.green, c.blue, 255) }.toArray
-    Image(360, 180, pixels.toArray)
+    val locations = (90 to -89 by -1).flatMap(i => (-180 to 179).map(j => Location(i, j)))
+    val temps = locations.map(loc => predictTemperature(temperatures, loc))
+    val pixelColors = temps.map(temp => interpolateColor(colors, temp))
+    val pixels = pixelColors.map(c => Pixel(c.red, c.green, c.blue, 255)).toArray
+    Image(360, 180, pixels)
   }
 
   /**
@@ -72,21 +70,23 @@ object Visualization {
     * @return The color that corresponds to `value`, according to the color scale defined by `points`
     */
   def interpolateColor(points: Iterable[(Double, Color)], temperature: Double): Color = {
-    val sortedPoints = points.toList.sortBy(_._1)
-    if (temperature < sortedPoints.head._1)
-      sortedPoints.head._2
-    else if (temperature > sortedPoints.reverse.head._1)
-      sortedPoints.reverse.head._2
-    else {
-      val matchColor = points.find(_._1 == temperature)
-      matchColor match {
-        case Some((_, color)) => color
-        case None => {
-          val (temp0, color0) = sortedPoints.filter(_._1 <= temperature).sortBy(-1 * _._1).head
-          val (temp1, color1) = sortedPoints.filter(_._1 > temperature).head
-          colorCalc(temperature, temp0, temp1, color0, color1)
+    val matchColor = points.find(_._1 == temperature)
+    matchColor match {
+      case Some((_, color)) => color
+      case None =>
+        val tempAscending = points.toList.sortBy(_._1)
+        val tempDescending = tempAscending.reverse
+        val lowerIndex = tempDescending.indexWhere { case (temp, _) => temp < temperature }
+        if (lowerIndex == -1) tempAscending.head._2
+        else {
+          val upperIndex = tempAscending.indexWhere { case (temp, _) => temp > temperature }
+          if (upperIndex == -1) tempAscending.reverse.head._2
+          else {
+            val (temp0, color0) = tempDescending(lowerIndex)
+            val (temp1, color1) = tempAscending(upperIndex)
+            colorCalc(temperature, temp0, temp1, color0, color1)
+          }
         }
-      }
     }
   }
 
